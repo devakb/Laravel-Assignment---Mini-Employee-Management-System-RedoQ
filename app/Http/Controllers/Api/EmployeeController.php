@@ -31,6 +31,8 @@ class EmployeeController extends Controller
                 $query->whereBetween('salary', [$salaryRange[0], $salaryRange[1]]);
             }
         })
+        ->with('department:id,name')
+        ->latest()
         ->paginate(10);
         return $this->paginatedResponse($employees);
     }
@@ -49,5 +51,14 @@ class EmployeeController extends Controller
         $employee->delete();
 
         return $this->successResponse(null, 'Employee deleted');
+    }
+
+    public function getMaxSalary()
+    {
+        $maxSalary = Employee::max('salary') ?? 0;
+
+        return $this->successResponse([
+            'max_salary' => (float) $maxSalary
+        ], 'Max salary retrieved');
     }
 }

@@ -6,14 +6,21 @@ use App\ApiResponseTrait;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ApiRequests\StoreDepartmentRequest;
 use App\Models\Department;
+use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
 {
     use ApiResponseTrait;
 
-    public function index()
+    public function index(Request $request)
     {
-        $departments = Department::paginate(10);
+        $departments = Department::query()
+            ->withCount('employees')
+            ->when($request->has('name'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->name . '%');
+            })
+            ->latest()
+            ->paginate(10);
 
         return $this->paginatedResponse($departments);
     }
