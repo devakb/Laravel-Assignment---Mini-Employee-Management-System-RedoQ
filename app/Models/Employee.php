@@ -11,8 +11,11 @@ class Employee extends Model
 
     protected $fillable = ['name', 'email', 'department_id', 'salary'];
 
+    protected $hidden = ['deleted_at'];
+
     public function department()
     {
         return $this->belongsTo(Department::class);
     }
+
 }
