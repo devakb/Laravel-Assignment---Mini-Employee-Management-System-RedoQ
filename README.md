@@ -33,10 +33,6 @@ cd MiniEmpMgtSys
 # Install PHP dependencies
 composer install
 
-# Install Node.js dependencies (optional, for frontend assets)
-npm install
-```
-
 ### Step 3: Environment Configuration
 
 ```bash
@@ -117,52 +113,6 @@ The application will be available at `http://localhost:8000`
    - Base URL: `http://localhost:8000/api`
    - See [API Documentation](api_doc.md) for complete endpoint details
 
-### Additional Setup (Optional)
-
-#### Queue Configuration
-
-For production, configure a proper queue driver in `.env`:
-
-```env
-QUEUE_CONNECTION=database
-```
-
-Then run migrations to create queue tables:
-```bash
-php artisan queue:table
-php artisan migrate
-```
-
-#### Frontend Assets (if using Vite)
-
-```bash
-# Build assets for production
-npm run build
-
-# Or run in development mode
-npm run dev
-```
-
-### Troubleshooting
-
-1. **Permission Issues:**
-   ```bash
-   chmod -R 775 storage bootstrap/cache
-   ```
-
-2. **Clear Cache:**
-   ```bash
-   php artisan config:clear
-   php artisan cache:clear
-   php artisan route:clear
-   php artisan view:clear
-   ```
-
-3. **Database Issues:**
-   ```bash
-   # Reset database
-   php artisan migrate:fresh --seed
-   ```
 
 ## 📖 API Documentation
 
