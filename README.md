@@ -1,4 +1,4 @@
-# RedoQ Software Services Private Limited
+# <img src="https://redoq.com/assets/images/logo-redoq.svg" alt="drawing" width="30"/> RedoQ Software Services Private Limited
 
 ## Laravel Assignment – Mini Employee Management System
 
@@ -7,11 +7,11 @@
 Build a small Employee Management System using Laravel 11 to demonstrate your understanding
 of database design, Eloquent ORM, middleware, validation, RESTful APIs, and queued jobs.
 
-## 📚 Documentation
+## Documentation
 
 - **[API Documentation](api_doc.md)** - Complete API endpoint documentation with request/response examples
 
-## 🚀 Installation Guide
+## Installation Guide
 
 ### Prerequisites
 
