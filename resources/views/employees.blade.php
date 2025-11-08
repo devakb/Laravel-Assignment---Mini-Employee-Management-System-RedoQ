@@ -70,8 +70,8 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Employees List</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createEmployeeModal">
+                    <div class="card-tools" id="empActionButtons">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createEmployeeModal" id="addEmpBtn" style="display: none;">
                             <i class="fas fa-plus"></i> Add Employee
                         </button>
                     </div>
@@ -183,13 +183,16 @@
 
         // Initialize salary range slider
         function initializeSalarySlider() {
+            // Calculate step based on max value (smaller step for smaller ranges)
+            let step = salarySliderMax > 10000 ? 1000 : (salarySliderMax > 1000 ? 100 : 10);
+            
             $('#salaryRangeSlider').ionRangeSlider({
                 type: 'double',
                 min: 0,
                 max: salarySliderMax,
                 from: 0,
                 to: salarySliderMax,
-                step: 1000,
+                step: step,
                 grid: true,
                 grid_num: 5,
                 onFinish: function(data) {
@@ -201,6 +204,9 @@
                     $('#salaryMaxDisplay').text(data.to.toLocaleString());
                 }
             });
+            // Set initial display values
+            $('#salaryMinDisplay').text('0');
+            $('#salaryMaxDisplay').text(salarySliderMax.toLocaleString());
         }
 
         // Fetch max salary from database
@@ -215,26 +221,40 @@
                 success: function(response) {
                     if (response.status && response.data && response.data.max_salary) {
                         let maxSalary = parseFloat(response.data.max_salary);
-                        // Set slider max to max_salary * 2
-                        salarySliderMax = Math.ceil((maxSalary * 2) / 10000) * 10000; // Round up to nearest 10k
-
+                        
+                        // Set slider max to max_salary * 2 (e.g., if max is 600, slider max is 1200)
+                        if (maxSalary > 0) {
+                            salarySliderMax = maxSalary * 2;
+                        } else {
+                            // If no employees, use default
+                            salarySliderMax = 100000;
+                        }
+                        
                         // Update slider if it's already initialized
                         let slider = $('#salaryRangeSlider').data('ionRangeSlider');
                         if (slider) {
                             slider.update({
+                                min: 0,
                                 max: salarySliderMax,
+                                from: 0,
                                 to: salarySliderMax
                             });
+                            $('#salaryMinDisplay').text('0');
                             $('#salaryMaxDisplay').text(salarySliderMax.toLocaleString());
                         } else {
                             // Initialize slider with new max
                             initializeSalarySlider();
                         }
+                    } else {
+                        // If no max salary data, use default
+                        salarySliderMax = 100000;
+                        initializeSalarySlider();
                     }
                 },
                 error: function(xhr) {
                     console.error('Error loading max salary');
                     // Use default if API fails
+                    salarySliderMax = 100000;
                     initializeSalarySlider();
                 }
             });
@@ -367,7 +387,12 @@
                     html += '<td>' + deptName + '</td>';
                     html += '<td>' + formatCurrency(emp.salary) + '</td>';
                     html += '<td>';
-                    html += '<button class="btn btn-sm btn-danger" onclick="deleteEmployee(' + emp.id + ', \'' + emp.name + '\')"><i class="fas fa-trash"></i></button>';
+                    // Only show delete button if user is admin
+                    if (typeof isAdmin === 'function' && isAdmin()) {
+                        html += '<button class="btn btn-sm btn-danger" onclick="deleteEmployee(' + emp.id + ', \'' + emp.name + '\')"><i class="fas fa-trash"></i></button>';
+                    } else {
+                        html += '<span class="text-muted">Not allowed</span>';
+                    }
                     html += '</td>';
                     html += '</tr>';
                 });
@@ -429,6 +454,7 @@
                 type: 'DELETE',
                 headers: {
                     'Authorization': 'Bearer ' + getToken(),
+                    'X-ROLE': 'admin',
                     'Accept': 'application/json'
                 },
                 success: function(response) {
@@ -494,6 +520,8 @@
             let slider = $('#salaryRangeSlider').data('ionRangeSlider');
             if (slider) {
                 slider.update({
+                    min: 0,
+                    max: salarySliderMax,
                     from: 0,
                     to: salarySliderMax
                 });
@@ -541,6 +569,7 @@
                 type: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + getToken(),
+                    'X-ROLE': 'admin',
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
@@ -607,7 +636,17 @@
             fetchAllDepartments();
         });
 
+        // Check admin status and show/hide buttons
+        function checkAdminStatus() {
+            if (typeof isAdmin === 'function' && isAdmin()) {
+                $('#addEmpBtn').show();
+            } else {
+                $('#addEmpBtn').hide();
+            }
+        }
+
         // Initial load - fetch max salary first, then initialize slider
+        checkAdminStatus();
         fetchMaxSalary();
         fetchAllDepartments();
         fetchEmployees(1);

@@ -126,6 +126,12 @@
                 $('#userNameText').text(userName);
             }
 
+            // Check if user is admin
+            window.isAdmin = function() {
+                let role = localStorage.getItem('user_role');
+                return role === 'admin';
+            };
+
             // Logout functionality
             $('#logoutBtn').click(function(e) {
                 e.preventDefault();
@@ -133,6 +139,7 @@
                     localStorage.removeItem('auth_token');
                     localStorage.removeItem('user_name');
                     localStorage.removeItem('user_email');
+                    localStorage.removeItem('user_role');
                     window.location.href = '/login';
                 }
             });

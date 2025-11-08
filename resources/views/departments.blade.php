@@ -15,8 +15,8 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Departments List</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createDepartmentModal">
+                    <div class="card-tools" id="deptActionButtons">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#createDepartmentModal" id="addDeptBtn" style="display: none;">
                             <i class="fas fa-plus"></i> Add Department
                         </button>
                     </div>
@@ -276,6 +276,7 @@
                 type: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + getToken(),
+                    'X-ROLE': 'admin',
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
@@ -332,7 +333,17 @@
             $('.form-control').removeClass('is-invalid');
         });
 
+        // Check admin status and show/hide buttons
+        function checkAdminStatus() {
+            if (typeof isAdmin === 'function' && isAdmin()) {
+                $('#addDeptBtn').show();
+            } else {
+                $('#addDeptBtn').hide();
+            }
+        }
+
         // Initial load
+        checkAdminStatus();
         fetchDepartments(1, '');
     });
 </script>

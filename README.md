@@ -7,7 +7,170 @@
 Build a small Employee Management System using Laravel 11 to demonstrate your understanding
 of database design, Eloquent ORM, middleware, validation, RESTful APIs, and queued jobs.
 
-## Requirements
+## 📚 Documentation
+
+- **[API Documentation](api_doc.md)** - Complete API endpoint documentation with request/response examples
+
+## 🚀 Installation Guide
+
+### Prerequisites
+
+- PHP >= 8.2
+- Composer
+- Node.js and NPM (for frontend assets)
+- Database (MySQL, PostgreSQL, SQLite, or SQL Server)
+
+### Step 1: Clone the Repository
+
+```bash
+git clone <repository-url>
+cd MiniEmpMgtSys
+```
+
+### Step 2: Install Dependencies
+
+```bash
+# Install PHP dependencies
+composer install
+
+# Install Node.js dependencies (optional, for frontend assets)
+npm install
+```
+
+### Step 3: Environment Configuration
+
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+### Step 4: Configure Database
+
+Edit the `.env` file and configure your database connection:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database_name
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
+
+**For SQLite (Quick Start):**
+```env
+DB_CONNECTION=sqlite
+DB_DATABASE=/absolute/path/to/database.sqlite
+```
+
+Or create the SQLite database file:
+```bash
+touch database/database.sqlite
+```
+
+### Step 5: Run Migrations
+
+```bash
+# Run database migrations
+php artisan migrate
+
+# Seed the database with sample users
+php artisan db:seed
+```
+
+**Default Users Created:**
+- **Admin User:**
+  - Email: `admin@admin.com`
+  - Password: `password` (default from UserFactory)
+  - Role: `admin`
+
+- **General User:**
+  - Email: `user@user.com`
+  - Password: `password` (default from UserFactory)
+  - Role: `user`
+
+> **Note:** The default password is typically `password`. If you need to change it, you can update the UserFactory or modify the seeder directly.
+
+### Step 6: Start the Development Server
+
+```bash
+# Start Laravel development server
+php artisan serve
+
+# In a separate terminal, start the queue worker (for email jobs)
+php artisan queue:work
+```
+
+The application will be available at `http://localhost:8000`
+
+### Step 7: Access the Application
+
+1. **Web Interface:**
+   - Login: `http://localhost:8000/login`
+   - Departments: `http://localhost:8000/departments`
+   - Employees: `http://localhost:8000/employees`
+
+2. **API Endpoints:**
+   - Base URL: `http://localhost:8000/api`
+   - See [API Documentation](api_doc.md) for complete endpoint details
+
+### Additional Setup (Optional)
+
+#### Queue Configuration
+
+For production, configure a proper queue driver in `.env`:
+
+```env
+QUEUE_CONNECTION=database
+```
+
+Then run migrations to create queue tables:
+```bash
+php artisan queue:table
+php artisan migrate
+```
+
+#### Frontend Assets (if using Vite)
+
+```bash
+# Build assets for production
+npm run build
+
+# Or run in development mode
+npm run dev
+```
+
+### Troubleshooting
+
+1. **Permission Issues:**
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+
+2. **Clear Cache:**
+   ```bash
+   php artisan config:clear
+   php artisan cache:clear
+   php artisan route:clear
+   php artisan view:clear
+   ```
+
+3. **Database Issues:**
+   ```bash
+   # Reset database
+   php artisan migrate:fresh --seed
+   ```
+
+## 📖 API Documentation
+
+For detailed API documentation including authentication, endpoints, request/response formats, and examples, please refer to [api_doc.md](api_doc.md).
+
+---
+
+## Project Requirements
 
 ### 1. Core Entities
 Create two tables: departments and employees, with proper relationships. Each employee belongs

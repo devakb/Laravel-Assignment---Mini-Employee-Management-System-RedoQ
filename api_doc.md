@@ -23,6 +23,28 @@ Most endpoints require authentication using Laravel Sanctum. After successful lo
 Authorization: Bearer {token}
 ```
 
+### Admin-Only Endpoints
+
+Some endpoints require admin privileges. For these endpoints, you must include an additional header:
+
+**Header Format:**
+```
+X-ROLE: admin
+```
+
+**Admin-Protected Endpoints:**
+- `POST /api/departments` - Create department
+- `POST /api/employees` - Create employee
+- `DELETE /api/employees/{id}` - Delete employee
+
+**Error Response (403) for Admin-Only Endpoints:**
+```json
+{
+  "status": false,
+  "message": "Unauthorized. Admin access required."
+}
+```
+
 ---
 
 ## Response Format
@@ -94,11 +116,14 @@ Authenticate a user and receive an access token.
     "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "user": {
       "name": "John Doe",
-      "email": "user@example.com"
+      "email": "user@example.com",
+      "role": "admin"
     }
   }
 }
 ```
+
+**Note:** The `role` field indicates the user's role (`admin` or `user`). Store this value along with the token for role-based access control on the frontend.
 
 **Error Response (401):**
 ```json
@@ -126,14 +151,22 @@ Authenticate a user and receive an access token.
 ### 2. Departments
 
 #### List All Departments
-Retrieve a paginated list of all departments.
+Retrieve a paginated list of all departments with employee counts. Supports searching by department name.
 
 **Endpoint:** `GET /api/departments`
 
 **Authentication:** Required (Bearer token)
 
 **Query Parameters:**
-- None (pagination is handled automatically with 10 items per page)
+- `name` (optional): Filter departments by name (partial match, case-insensitive)
+- `page` (optional): Page number for pagination (default: 1)
+
+**Examples:**
+- `GET /api/departments` - Get all departments
+- `GET /api/departments?name=Engineering` - Search departments by name
+- `GET /api/departments?page=2` - Get second page of results
+
+**Note:** Pagination is handled automatically with 10 items per page.
 
 **Success Response (200):**
 ```json
@@ -144,12 +177,14 @@ Retrieve a paginated list of all departments.
     {
       "id": 1,
       "name": "Engineering",
+      "employees_count": 5,
       "created_at": "2025-01-01T00:00:00.000000Z",
       "updated_at": "2025-01-01T00:00:00.000000Z"
     },
     {
       "id": 2,
       "name": "Marketing",
+      "employees_count": 3,
       "created_at": "2025-01-01T00:00:00.000000Z",
       "updated_at": "2025-01-01T00:00:00.000000Z"
     }
@@ -163,6 +198,8 @@ Retrieve a paginated list of all departments.
 }
 ```
 
+**Note:** The `employees_count` field indicates the number of employees in each department.
+
 **Error Response (401):**
 ```json
 {
@@ -175,11 +212,15 @@ Retrieve a paginated list of all departments.
 ---
 
 #### Create Department
-Create a new department.
+Create a new department. **Admin access required.**
 
 **Endpoint:** `POST /api/departments`
 
 **Authentication:** Required (Bearer token)
+
+**Required Headers:**
+- `Authorization: Bearer {token}`
+- `X-ROLE: admin`
 
 **Request Body:**
 ```json
@@ -228,6 +269,14 @@ Create a new department.
 }
 ```
 
+**Error Response (403):**
+```json
+{
+  "status": false,
+  "message": "Unauthorized. Admin access required."
+}
+```
+
 ---
 
 ### 3. Employees
@@ -244,13 +293,15 @@ Retrieve a paginated list of all employees with their department information. Su
 - `name` (optional): Filter employees by name (partial match, case-insensitive)
 - `email` (optional): Filter employees by email (partial match, case-insensitive)
 - `salary_range` (optional): Filter employees by salary range (format: `min-max`, e.g., `30000-70000`)
+- `page` (optional): Page number for pagination (default: 1)
 
 **Examples:**
 - `GET /api/employees?department_id=1` - Get employees in department 1
 - `GET /api/employees?name=John` - Get employees with "John" in their name
 - `GET /api/employees?email=example.com` - Get employees with "example.com" in their email
 - `GET /api/employees?salary_range=40000-60000` - Get employees with salary between 40000 and 60000
-- `GET /api/employees?department_id=1&name=John` - Combine multiple filters
+- `GET /api/employees?department_id=1&name=John&salary_range=30000-70000` - Combine multiple filters
+- `GET /api/employees?page=2` - Get second page of results
 
 **Note:** Pagination is handled automatically with 10 items per page. Filters can be combined.
 
@@ -266,6 +317,10 @@ Retrieve a paginated list of all employees with their department information. Su
       "email": "john.doe@example.com",
       "department_id": 1,
       "salary": 50000.00,
+      "department": {
+        "id": 1,
+        "name": "Engineering"
+      },
       "created_at": "2025-01-01T00:00:00.000000Z",
       "updated_at": "2025-01-01T00:00:00.000000Z"
     },
@@ -275,6 +330,10 @@ Retrieve a paginated list of all employees with their department information. Su
       "email": "jane.smith@example.com",
       "department_id": 2,
       "salary": 60000.00,
+      "department": {
+        "id": 2,
+        "name": "Marketing"
+      },
       "created_at": "2025-01-01T00:00:00.000000Z",
       "updated_at": "2025-01-01T00:00:00.000000Z"
     }
@@ -288,6 +347,8 @@ Retrieve a paginated list of all employees with their department information. Su
 }
 ```
 
+**Note:** The `department` object contains the department's `id` and `name` for each employee.
+
 **Error Response (401):**
 ```json
 {
@@ -300,11 +361,15 @@ Retrieve a paginated list of all employees with their department information. Su
 ---
 
 #### Create Employee
-Create a new employee. A welcome email job will be dispatched automatically upon creation.
+Create a new employee. A welcome email job will be dispatched automatically upon creation. **Admin access required.**
 
 **Endpoint:** `POST /api/employees`
 
 **Authentication:** Required (Bearer token)
+
+**Required Headers:**
+- `Authorization: Bearer {token}`
+- `X-ROLE: admin`
 
 **Request Body:**
 ```json
@@ -372,16 +437,28 @@ Create a new employee. A welcome email job will be dispatched automatically upon
 }
 ```
 
+**Error Response (403):**
+```json
+{
+  "status": false,
+  "message": "Unauthorized. Admin access required."
+}
+```
+
 **Note:** Upon successful creation, a welcome email job is automatically dispatched to the queue.
 
 ---
 
 #### Delete Employee
-Soft delete an employee by ID.
+Soft delete an employee by ID. **Admin access required.**
 
 **Endpoint:** `DELETE /api/employees/{id}`
 
 **Authentication:** Required (Bearer token)
+
+**Required Headers:**
+- `Authorization: Bearer {token}`
+- `X-ROLE: admin`
 
 **URL Parameters:**
 - `id`: The ID of the employee to delete (route model binding)
@@ -413,7 +490,46 @@ Soft delete an employee by ID.
 }
 ```
 
+**Error Response (403):**
+```json
+{
+  "status": false,
+  "message": "Unauthorized. Admin access required."
+}
+```
+
 **Note:** This endpoint performs a soft delete, meaning the employee record is not permanently removed from the database.
+
+---
+
+#### Get Maximum Salary
+Retrieve the maximum salary from all employees. Useful for setting up salary range filters.
+
+**Endpoint:** `GET /api/employees/max-salary`
+
+**Authentication:** Required (Bearer token)
+
+**Success Response (200):**
+```json
+{
+  "status": true,
+  "message": "Max salary retrieved",
+  "data": {
+    "max_salary": 100000.00
+  }
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "status": false,
+  "message": "Unauthenticated",
+  "errors": null
+}
+```
+
+**Note:** Returns `0` if no employees exist in the database.
 
 ---
 
@@ -464,9 +580,26 @@ curl -X POST http://your-domain.com/api/login \
 
 #### Get Departments (Authenticated)
 ```bash
+# Get all departments
 curl -X GET http://your-domain.com/api/departments \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json"
+
+# Search departments by name
+curl -X GET "http://your-domain.com/api/departments?name=Engineering" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -H "Content-Type: application/json"
+```
+
+#### Create Department (Admin Only)
+```bash
+curl -X POST http://your-domain.com/api/departments \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -H "X-ROLE: admin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Engineering"
+  }'
 ```
 
 #### Get Employees with Filters (Authenticated)
@@ -492,10 +625,11 @@ curl -X GET "http://your-domain.com/api/employees?department_id=1&name=John&sala
   -H "Content-Type: application/json"
 ```
 
-#### Create Employee (Authenticated)
+#### Create Employee (Admin Only)
 ```bash
 curl -X POST http://your-domain.com/api/employees \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -H "X-ROLE: admin" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "John Doe",
@@ -505,9 +639,17 @@ curl -X POST http://your-domain.com/api/employees \
   }'
 ```
 
-#### Delete Employee (Authenticated)
+#### Delete Employee (Admin Only)
 ```bash
 curl -X DELETE http://your-domain.com/api/employees/1 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -H "X-ROLE: admin" \
+  -H "Content-Type: application/json"
+```
+
+#### Get Maximum Salary (Authenticated)
+```bash
+curl -X GET http://your-domain.com/api/employees/max-salary \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Content-Type: application/json"
 ```
